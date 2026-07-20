@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="JobOps — suite open-source de herramientas para búsqueda de empleo: cartas de presentación, mensajes de LinkedIn, tracker de postulaciones, análisis de match de CV y preparación de entrevistas.">
+<title>EST · JobOps — Suite de Búsqueda de Empleo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0C0A15; --panel:#14111F; --line:#2A2440;
+  --violet:#9551FC; --magenta:#FB03AA; --cyan:#03EDFC;
+  --txt:#D8D4E8; --dim:#8B85A3; --ok:#2ED573; --warnc:#FFA502; --bad:#FF4757;
+  --paper:#FFF; --ink:#1A1A2E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Share Tech Mono',monospace;min-height:100vh;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:64px 64px;background-position:center}
+header{padding:18px 26px 0;background:rgba(12,10,21,.92);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:baseline;gap:14px;margin-bottom:14px}
+.brand h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:21px;letter-spacing:4px;color:#fff;
+  text-shadow:2px 2px 0 rgba(251,3,170,.55),-2px -2px 0 rgba(3,237,252,.55)}
+.brand span{color:var(--cyan);font-size:12px;letter-spacing:2px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:2px;padding:11px 16px;
+  background:transparent;border:none;border-bottom:3px solid transparent;color:var(--dim);cursor:pointer;transition:color .15s}
+nav button:hover{color:var(--txt)}
+nav button.on{color:var(--cyan);border-bottom-color:var(--magenta)}
+nav button:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+main{padding:26px;max-width:1200px;margin:0 auto}
+section{display:none}
+section.on{display:block}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px;position:relative;margin-bottom:20px}
+.panel::before{content:"";position:absolute;inset:-1px auto auto -1px;width:26px;height:26px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan)}
+.panel h2{font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:3px;color:var(--violet);margin-bottom:14px}
+label{display:block;font-family:'Orbitron',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;color:var(--violet);margin-bottom:5px;text-transform:uppercase}
+input,select,textarea{width:100%;background:#0F0D1B;border:1px solid var(--line);border-left:3px solid var(--violet);
+  color:#fff;font-family:'Share Tech Mono',monospace;font-size:13.5px;padding:9px 10px;border-radius:3px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan);border-left-color:var(--cyan)}
+input::placeholder,textarea::placeholder{color:#544E6B}
+textarea{resize:vertical;line-height:1.5}
+.btn{font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;padding:11px 16px;
+  border-radius:3px;cursor:pointer;border:1px solid var(--cyan);background:transparent;color:var(--cyan);transition:all .15s}
+.btn:hover{background:rgba(3,237,252,.12)}
+.btn.primary{background:linear-gradient(90deg,var(--violet),var(--magenta));border:none;color:#fff}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn.del{border-color:var(--bad);color:var(--bad);padding:6px 10px;font-size:10px}
+.btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.grid2{display:grid;grid-template-columns:400px 1fr;gap:22px;align-items:start}
+@media(max-width:960px){.grid2{grid-template-columns:1fr}}
+.field{margin-bottom:14px}
+.hint{font-size:11px;color:var(--dim);margin-top:4px}
+.tip{font-size:12px;color:var(--dim);border-left:3px solid var(--violet);padding:6px 10px;line-height:1.55;margin-top:12px}
+.status{font-size:12px;color:var(--cyan);min-height:16px}
+.radios{display:grid;gap:8px}
+.radios input{display:none}
+.radios label.opt{display:flex;gap:10px;align-items:center;font-family:'Share Tech Mono',monospace;font-weight:400;
+  font-size:12.5px;letter-spacing:0;text-transform:none;color:var(--txt);border:1px solid var(--line);
+  border-radius:3px;padding:9px 11px;cursor:pointer;margin:0}
+.radios label.opt b{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--dim);white-space:nowrap}
+.radios input:checked + label.opt{border-color:var(--magenta);background:rgba(251,3,170,.07)}
+.radios input:checked + label.opt b{color:var(--magenta)}
+.chip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;white-space:nowrap;border:1px solid}
+
+/* HOME */
+.hero{text-align:center;padding:46px 20px 30px}
+.hero h2{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(26px,5vw,44px);letter-spacing:6px;color:#fff;
+  text-shadow:3px 3px 0 rgba(251,3,170,.5),-3px -3px 0 rgba(3,237,252,.5);margin-bottom:14px}
+.hero p{max-width:640px;margin:0 auto 8px;font-size:14px;line-height:1.6;color:var(--txt)}
+.hero .sub{color:var(--dim);font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:30px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;cursor:pointer;text-align:left;transition:border-color .15s}
+.card:hover{border-color:var(--magenta)}
+.card .n{font-family:'Orbitron',sans-serif;font-size:10px;color:var(--dim);letter-spacing:2px}
+.card h3{font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:2px;color:var(--cyan);margin:8px 0 8px}
+.card p{font-size:12px;color:var(--dim);line-height:1.55}
+
+/* LETTER sheet */
+.sheet{background:var(--paper);color:var(--ink);width:100%;max-width:760px;padding:52px 58px;border-radius:2px;
+  box-shadow:0 0 0 1px var(--line),0 18px 60px rgba(0,0,0,.55);font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;margin:0 auto}
+.sheet .lname{font-size:18px;font-weight:700}
+.sheet .lsub{font-size:11.5px;color:#4A4A66;border-bottom:2px solid #4338CA;padding-bottom:7px;margin-bottom:22px}
+.sheet p{margin-bottom:12px;text-align:justify}
+.sheet .meta{text-align:right;color:#33334D;margin-bottom:18px}
+.sheet .foot{font-size:10.5px;color:#4A4A66;margin-top:18px;border-top:1px solid #DDD;padding-top:7px}
+.ph{background:#FFE9F5;color:#B0006E;padding:0 3px;border-radius:2px}
+@media print{
+  @page{size:A4;margin:18mm 16mm}
+  body{background:#fff}
+  header,.noprint{display:none!important}
+  main{padding:0;max-width:none}
+  section{display:none!important}
+  section#s-cartas{display:block!important}
+  #s-cartas .grid2{display:block}
+  #s-cartas .panel,#s-cartas .tip{display:none}
+  .sheet{box-shadow:none;max-width:none;padding:0;font-size:12.3pt}
+  .ph{background:none;color:inherit;padding:0}
+}
+
+/* TRACKER */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:13px;text-align:center}
+.stat .n{font-family:'Orbitron',sans-serif;font-weight:900;font-size:24px;color:var(--cyan)}
+.stat .l{font-size:9.5px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:'Orbitron',sans-serif;font-size:9.5px;letter-spacing:2px;color:var(--dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:rgba(149,81,252,.05)}
+td select{padding:5px 6px;font-size:12px}
+.dias{color:var(--dim);font-size:12px}
+.alert{color:var(--warnc);font-size:11.5px;white-space:nowrap}
+a.jlink{color:var(--cyan);text-decoration:none}
+.empty{text-align:center;color:var(--dim);padding:26px;font-size:13px}
+@media(max-width:760px){.hidem{display:none}}
+
+/* MATCH */
+.score{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.score .big{font-family:'Orbitron',sans-serif;font-weight:900;font-size:42px}
+.bar{flex:1;min-width:170px;height:10px;background:#0F0D1B;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.bar div{height:100%;background:linear-gradient(90deg,var(--violet),var(--cyan));width:0;transition:width .5s}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:18px}
+.col h3{font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;margin-bottom:10px}
+.col.match h3{color:var(--ok)}.col.miss h3{color:var(--warnc)}.col.extra h3{color:var(--dim)}
+.kw{display:inline-block;margin:0 6px 8px 0;padding:4px 10px;border-radius:12px;font-size:12px;border:1px solid}
+.match .kw{border-color:var(--ok);color:var(--ok)}
+.miss .kw{border-color:var(--warnc);color:var(--warnc)}
+.extra .kw{border-color:var(--line);color:var(--dim)}
+
+/* INTERVIEW */
+.q{border:1px solid var(--line);border-radius:5px;padding:16px;margin-bottom:14px;background:#100E1C}
+.q .tag{display:inline-block;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;padding:3px 9px;border-radius:10px;margin-bottom:8px}
+.q .tag.tec{border:1px solid var(--cyan);color:var(--cyan)}
+.q .tag.con{border:1px solid var(--magenta);color:var(--magenta)}
+.q .preg{font-family:'Segoe UI',Helvetica,sans-serif;font-size:15px;color:#fff;margin-bottom:8px;line-height:1.45}
+.q .angulo{display:none;font-size:12.5px;line-height:1.6;border-left:3px solid var(--violet);padding:8px 12px;margin-top:8px}
+.q .angulo.show{display:block}
+.meter{display:flex;justify-content:space-between;margin-top:8px;font-size:12px}
+.cnt.ok{color:var(--ok)}.cnt.warn{color:var(--warnc)}.cnt.bad{color:var(--bad)}
+footer{text-align:center;color:var(--dim);font-size:11px;padding:26px;letter-spacing:1px}
+footer a{color:var(--cyan);text-decoration:none}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="noprint">
+  <div class="brand"><h1>JOBOPS</h1><span>// EST :: SUITE DE BÚSQUEDA DE EMPLEO_</span></div>
+  <nav id="nav">
+    <button data-s="inicio" class="on">INICIO</button>
+    <button data-s="cartas">CARTAS</button>
+    <button data-s="linkedin">LINKEDIN</button>
+    <button data-s="tracker">TRACKER</button>
+    <button data-s="match">MATCH CV</button>
+    <button data-s="entrevista">ENTREVISTA</button>
+  </nav>
+</header>
+
+<main>
+<!-- ============ INICIO ============ -->
+<section id="s-inicio" class="on">
+  <div class="hero">
+    <h2>JOBOPS</h2>
+    <p>Suite de herramientas para postular a empleos sin morir en el intento: genera cartas de presentación y mensajes de LinkedIn en segundos, trackea tus postulaciones, analiza tu match con cada oferta y practica la entrevista.</p>
+    <p class="sub">&gt;_ 100% vanilla JS · sin dependencias · sin backend · tus datos nunca salen de tu navegador_</p>
+  </div>
+  <div class="cards" id="homeCards">
+    <button class="card" data-s="cartas"><span class="n">[01]</span><h3>CARTAS</h3><p>Carta de presentación personalizada por empresa, lista para guardar como PDF. Fecha automática, párrafo adaptable según el tipo de cargo.</p></button>
+    <button class="card" data-s="linkedin"><span class="n">[02]</span><h3>LINKEDIN</h3><p>5 escenarios de mensajes: conexión, contacto en frío, follow-up, agradecimiento y respuesta. Con contador de caracteres.</p></button>
+    <button class="card" data-s="tracker"><span class="n">[03]</span><h3>TRACKER</h3><p>Pipeline de postulaciones con estados, alertas de follow-up a los 5 días y estadísticas de tasa de respuesta.</p></button>
+    <button class="card" data-s="match"><span class="n">[04]</span><h3>MATCH CV</h3><p>Pega el aviso y descubre qué skills destacar, cuáles te faltan y tu porcentaje de match para pasar filtros ATS.</p></button>
+    <button class="card" data-s="entrevista"><span class="n">[05]</span><h3>ENTREVISTA</h3><p>Banco de preguntas reales para roles junior front-end, con el ángulo sugerido para responder cada una.</p></button>
+  </div>
+</section>
+
+<!-- ============ CARTAS ============ -->
+<section id="s-cartas">
+  <div class="grid2">
+    <form class="panel" onsubmit="return false">
+      <h2>&gt;_ DATOS DE LA POSTULACIÓN</h2>
+      <div class="field"><label for="cEmpresa">Empresa</label><input id="cEmpresa" autocomplete="off"></div>
+      <div class="field"><label for="cCargo">Cargo</label><input id="cCargo" autocomplete="off"></div>
+      <div class="field"><label for="cPortal">Publicado en</label>
+        <select id="cPortal"><option>GetOnBrd</option><option>LinkedIn</option><option>Computrabajo</option><option>Laborum</option><option>Indeed</option><option value="otro">Otro…</option></select>
+        <input id="cPortalOtro" placeholder="Nombre del portal" style="display:none;margin-top:8px" autocomplete="off"></div>
+      <div class="field"><label for="cRecl">Reclutador/a</label><input id="cRecl" placeholder="Vacío = Equipo de Selección" autocomplete="off"></div>
+      <div class="field"><label>Tipo de cargo</label>
+        <div class="radios">
+          <input type="radio" name="cTipo" id="ct1" value="front" checked><label class="opt" for="ct1"><b>&gt;_01</b> Front-End / Diseño Web</label>
+          <input type="radio" name="cTipo" id="ct2" value="soporte"><label class="opt" for="ct2"><b>&gt;_02</b> Soporte TI / Informática</label>
+          <input type="radio" name="cTipo" id="ct3" value="tecnico"><label class="opt" for="ct3"><b>&gt;_03</b> Cargo técnico</label>
+        </div></div>
+      <div class="field"><label for="cMotiv">Qué te motiva de la empresa</label><input id="cMotiv" placeholder="Ej: su plataforma de e-commerce" autocomplete="off">
+        <div class="hint">Opcional pero recomendado.</div></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="cBtnPdf">GUARDAR PDF</button>
+        <button type="button" class="btn" id="cBtnCopy">COPIAR TEXTO</button>
+        <span class="status" id="cStatus" role="status"></span>
+      </div>
+    </form>
+    <div><div class="sheet" id="cSheet"></div></div>
+  </div>
+</section>
+
+<!-- ============ LINKEDIN ============ -->
+<section id="s-linkedin">
+  <div class="grid2">
+    <form class="panel" onsubmit="return false">
+      <h2>&gt;_ ESCENARIO</h2>
+      <div class="field"><div class="radios" id="lEsc">
+        <input type="radio" name="lE" id="le1" value="conexion" checked><label class="opt" for="le1"><b>&gt;_01</b> Nota de conexión (máx. 300)</label>
+        <input type="radio" name="lE" id="le2" value="frio"><label class="opt" for="le2"><b>&gt;_02</b> Mensaje en frío a reclutador</label>
+        <input type="radio" name="lE" id="le3" value="followup"><label class="opt" for="le3"><b>&gt;_03</b> Follow-up post-postulación</label>
+        <input type="radio" name="lE" id="le4" value="gracias"><label class="opt" for="le4"><b>&gt;_04</b> Agradecimiento post-entrevista</label>
+        <input type="radio" name="lE" id="le5" value="respuesta"><label class="opt" for="le5"><b>&gt;_05</b> Respuesta a reclutador</label>
+      </div></div>
+      <div class="field"><label for="lNombre">Nombre del contacto</label><input id="lNombre" placeholder="Ej: Carolina" autocomplete="off"></div>
+      <div class="field"><label for="lEmpresa">Empresa</label><input id="lEmpresa" autocomplete="off"></div>
+      <div class="field" id="lFCargo"><label for="lCargo">Cargo</label><input id="lCargo" autocomplete="off"></div>
+      <div class="field"><label for="lDetalle">Detalle específico</label><input id="lDetalle" placeholder="Ej: su nueva app de delivery" autocomplete="off">
+        <div class="hint">Opcional: muestra que hiciste la tarea.</div></div>
+    </form>
+    <div class="panel">
+      <h2 id="lSub">MENSAJE</h2>
+      <textarea id="lMsg" style="min-height:250px;font-family:'Segoe UI',Helvetica,sans-serif;font-size:15px" spellcheck="false" aria-label="Mensaje generado, editable"></textarea>
+      <div class="meter"><span class="cnt ok" id="lCount">0</span><span style="color:var(--dim)" id="lLimit"></span></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="lBtnCopy">COPIAR</button>
+        <button type="button" class="btn" id="lBtnRegen">REGENERAR</button>
+        <span class="status" id="lStatus" role="status"></span>
+      </div>
+      <div class="tip" id="lTip"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRACKER ============ -->
+<section id="s-tracker">
+  <div class="stats">
+    <div class="stat"><div class="n" id="tTotal">0</div><div class="l">Postulaciones</div></div>
+    <div class="stat"><div class="n" id="tActivas">0</div><div class="l">Activas</div></div>
+    <div class="stat"><div class="n" id="tEntrev">0</div><div class="l">Entrevistas</div></div>
+    <div class="stat"><div class="n" id="tTasa">0%</div><div class="l">Tasa respuesta</div></div>
+    <div class="stat"><div class="n" id="tFollow">0</div><div class="l">Follow-ups hoy</div></div>
+  </div>
+  <form class="panel" onsubmit="return false">
+    <h2>&gt;_ NUEVA POSTULACIÓN</h2>
+    <div class="grid">
+      <div><label for="tEmpresa">Empresa</label><input id="tEmpresa" autocomplete="off"></div>
+      <div><label for="tCargo">Cargo</label><input id="tCargo" autocomplete="off"></div>
+      <div><label for="tPortal">Portal</label><select id="tPortal"><option>GetOnBrd</option><option>LinkedIn</option><option>Computrabajo</option><option>Laborum</option><option>Indeed</option><option>Web de la empresa</option><option>Contacto directo</option></select></div>
+      <div><label for="tFecha">Fecha</label><input id="tFecha" type="date"></div>
+      <div><label for="tLink">Link (opcional)</label><input id="tLink" placeholder="https://…" autocomplete="off"></div>
+    </div>
+    <div class="row"><button type="button" class="btn primary" id="tBtnAdd">AGREGAR</button><span class="status" id="tStatus" role="status"></span></div>
+  </form>
+  <div class="panel">
+    <h2>&gt;_ PIPELINE</h2>
+    <table><thead><tr><th>Empresa</th><th>Cargo</th><th class="hidem">Portal</th><th>Enviada</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="tBody"></tbody></table>
+    <div class="empty" id="tEmpty">Sin postulaciones todavía. Agregá la primera arriba ↑</div>
+    <div class="row">
+      <button type="button" class="btn" id="tBtnSave">💾 GUARDAR ARCHIVO</button>
+      <button type="button" class="btn" id="tBtnLoad">📂 CARGAR ARCHIVO</button>
+      <input type="file" id="tFileIn" accept=".json" style="display:none">
+    </div>
+    <div class="tip">&gt;_ Los datos viven en la página mientras esté abierta. Antes de cerrar: <b style="color:var(--magenta)">GUARDAR ARCHIVO</b> (baja postulaciones.json). Al volver: <b style="color:var(--magenta)">CARGAR ARCHIVO</b>.</div>
+  </div>
+</section>
+
+<!-- ============ MATCH CV ============ -->
+<section id="s-match">
+  <div class="panel">
+    <h2>&gt;_ PEGÁ EL TEXTO DEL AVISO</h2>
+    <textarea id="mAviso" style="min-height:170px" placeholder="Copiá y pegá la descripción completa de la oferta…"></textarea>
+    <div class="row"><button type="button" class="btn primary" id="mBtnGo">ANALIZAR MATCH</button></div>
+  </div>
+  <div class="panel" id="mResult" style="display:none">
+    <h2>&gt;_ RESULTADO</h2>
+    <div class="score"><div class="big" id="mPct">0%</div><div class="bar"><div id="mBar"></div></div>
+      <div id="mVer" style="font-size:12.5px;max-width:330px"></div></div>
+    <div class="cols">
+      <div class="col match"><h3>✓ TENÉS Y EL AVISO PIDE</h3><div id="mMatch"></div></div>
+      <div class="col miss"><h3>⚠ PIDE Y NO ESTÁ EN TU CV</h3><div id="mMiss"></div></div>
+      <div class="col extra"><h3>◇ TENÉS Y NO PIDE</h3><div id="mExtra"></div></div>
+    </div>
+    <div class="tip" id="mTips"></div>
+  </div>
+</section>
+
+<!-- ============ ENTREVISTA ============ -->
+<section id="s-entrevista">
+  <div class="panel">
+    <h2>&gt;_ BANCO DE PREGUNTAS — JUNIOR FRONT-END</h2>
+    <div class="hint" style="margin-bottom:14px">Practicá en voz alta. Apretá "VER ÁNGULO" solo después de intentar tu propia respuesta — así entrena de verdad.</div>
+    <div class="row" style="margin-bottom:14px">
+      <button type="button" class="btn on" data-f="todas">TODAS</button>
+      <button type="button" class="btn" data-f="tec">TÉCNICAS</button>
+      <button type="button" class="btn" data-f="con">CONDUCTUALES</button>
+      <button type="button" class="btn primary" id="qShuffle">🎲 ALEATORIA</button>
+    </div>
+    <div id="qList"></div>
+  </div>
+</section>
+</main>
+
+<footer class="noprint">JOBOPS · construido con vanilla JS por <a href="https://github.com/emilianost95-gif" rel="noopener">Emiliano Santo Tomás</a> · <a href="https://emilianost95-gif.github.io/Portafolio-Emiliano-Santo-Tom-s" rel="noopener">portafolio</a></footer>
+
+<script>
+/* ============================================================
+   CONFIG — personalizá acá tus datos. Todo lo demás los usa.
+   ============================================================ */
+const CONFIG = {
+  nombre: 'Emiliano Samir Santo Tomás',
+  titulo: 'Desarrollador Front-End',
+  ciudad: 'Chillán Viejo',
+  pais: 'Chile',
+  telefono: '+56 9 2643 2541',
+  email: 'emilianost95@gmail.com',
+  portafolio: 'emilianost95-gif.github.io/Portafolio-Emiliano-Santo-Tom-s',
+  github: 'github.com/emilianost95-gif',
+  hook: 'Soy desarrollador front-end con 5 sitios entregados a clientes reales y en producción (HTML, CSS, JavaScript, GSAP, integraciones con WhatsApp y Google Sheets).',
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const hoy = () => new Date().toISOString().slice(0,10);
+
+/* ---------- NAV ---------- */
+function go(s){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.s===s));
+  document.querySelectorAll('main > section').forEach(x=>x.classList.toggle('on', x.id==='s-'+s));
+}
+document.querySelectorAll('nav button, .card').forEach(b=>b.addEventListener('click', ()=>go(b.dataset.s)));
+
+/* ---------- CARTAS ---------- */
+function cartaBuild(){
+  const empresa=$('cEmpresa').value.trim(), cargo=$('cCargo').value.trim();
+  let portal=$('cPortal').value; if(portal==='otro') portal=$('cPortalOtro').value.trim();
+  const recl=$('cRecl').value.trim(), motiv=$('cMotiv').value.trim();
+  const tipo=document.querySelector('input[name="cTipo"]:checked').value;
+  const d=new Date(), fecha=d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear();
+  const ph=(v,f)=> v?esc(v):'<span class="ph">'+f+'</span>';
+  const E=ph(empresa,'[empresa]'), C=ph(cargo,'[cargo]'), P=ph(portal,'[portal]');
+  const saludo = recl?'Estimado/a '+esc(recl)+':':'Estimado Equipo de Selección:';
+  const dest = recl?'Sr./Sra. '+esc(recl):'Equipo de Selección';
+  let adap='';
+  if(tipo==='front'){
+    adap = (motiv?'Me motiva especialmente '+esc(motiv)+'.':'Me motiva especialmente la posibilidad de aportar a los proyectos de '+E+'.')+
+      ' Mi portafolio ('+CONFIG.portafolio+') demuestra que puedo tomar un requerimiento desde cero y entregar un producto terminado, funcional y con identidad visual propia.';
+  } else if(tipo==='soporte'){
+    adap = 'Mi experiencia en soporte informático y atención al cliente me enseñó a diagnosticar problemas con método y a comunicar soluciones técnicas en lenguaje simple, algo esencial para acompañar a usuarios y equipos internos.';
+  } else {
+    adap = 'Mi formación como técnico en soldadura y procesos metalúrgicos me dio disciplina, precisión, lectura de planos y trabajo bajo normas de seguridad: hábitos que traslado a cualquier entorno técnico.';
+  }
+  $('cSheet').innerHTML =
+    '<div class="lname">'+CONFIG.nombre.toUpperCase()+'</div>'+
+    '<div class="lsub">'+CONFIG.titulo+' · '+CONFIG.ciudad+', '+CONFIG.pais+' · '+CONFIG.telefono+' · '+CONFIG.email+'</div>'+
+    '<p class="meta">'+esc(CONFIG.ciudad)+', '+fecha+'</p>'+
+    '<p>'+dest+'<br>'+E+'</p><p>'+saludo+'</p>'+
+    '<p>Le escribo para postular al cargo de <b>'+C+'</b> publicado en '+P+'. Soy desarrollador Front-End con 5 proyectos web entregados a clientes reales y desplegados en producción, y creo que mi combinación de habilidades técnicas, orientación al cliente y capacidad de autoaprendizaje puede aportar valor inmediato a '+E+'.</p>'+
+    '<p>En el último año diseñé, desarrollé y publiqué sitios completos para clientes de retail, construcción y servicios, incluyendo un e-commerce con carrito de compras y checkout integrado a WhatsApp Business y Google Sheets. Trabajo con HTML5, CSS3, JavaScript ES6+ y React, aplicando diseño responsive, control de versiones con Git/GitHub y optimización de rendimiento. Además, integro herramientas de IA como Claude y ChatGPT en mi flujo de trabajo, lo que me permite desarrollar y documentar más rápido sin sacrificar calidad.</p>'+
+    '<p>'+adap+'</p>'+
+    '<p>Aprendo rápido, trabajo bien de forma autónoma y en equipo, y asumo cada entrega con responsabilidad profesional. Me encantaría tener la oportunidad de conversar sobre cómo puedo contribuir a los objetivos de '+E+'.</p>'+
+    '<p>Quedo atento a su respuesta. Muchas gracias por su tiempo y consideración.</p>'+
+    '<p style="margin-top:22px">Atentamente,<br><b>'+CONFIG.nombre+'</b></p>'+
+    '<div class="foot">Portafolio: '+CONFIG.portafolio+' · GitHub: '+CONFIG.github+'</div>';
+  return !empresa || !cargo || !portal;
+}
+['cEmpresa','cCargo','cPortal','cPortalOtro','cRecl','cMotiv'].forEach(id=>{
+  $(id).addEventListener('input', cartaBuild); $(id).addEventListener('change', cartaBuild);
+});
+document.querySelectorAll('input[name="cTipo"]').forEach(r=>r.addEventListener('change', cartaBuild));
+$('cPortal').addEventListener('change', ()=>{ $('cPortalOtro').style.display = $('cPortal').value==='otro'?'block':'none'; });
+$('cBtnPdf').addEventListener('click', ()=>{
+  const missing = cartaBuild();
+  if(missing && !confirm('Hay campos sin completar (en rosa). ¿Imprimir igual?')) return;
+  window.print();
+});
+$('cBtnCopy').addEventListener('click', async ()=>{
+  cartaBuild();
+  try{ await navigator.clipboard.writeText($('cSheet').innerText); $('cStatus').textContent='✓ Copiado'; }
+  catch(e){ $('cStatus').textContent='Copiá manual (Ctrl+C)'; }
+  setTimeout(()=>$('cStatus').textContent='',2500);
+});
+
+/* ---------- LINKEDIN ---------- */
+const L_LIMITS = {conexion:300, frio:700, followup:600, gracias:600, respuesta:700};
+const L_TIPS = {
+  conexion:'Tope duro de 300 caracteres. Cortita: quién sos y por qué conectás. El objetivo es que acepte.',
+  frio:'Mandalo DESPUÉS de que acepten la conexión. Cerrá con una pregunta concreta.',
+  followup:'Ideal 5–7 días después de postular. Un solo follow-up por proceso.',
+  gracias:'Mismo día o día siguiente de la entrevista. Casi nadie lo hace: se nota.',
+  respuesta:'Respondé dentro de 24 horas aunque el cargo no te convenza — ese contacto sirve para el próximo proceso.'
+};
+const L_SUBS = {
+  conexion:'NOTA DE CONEXIÓN — botón Conectar → Añadir nota',
+  frio:'MENSAJE DIRECTO — post-conexión',
+  followup:'MENSAJE DIRECTO — follow-up',
+  gracias:'MENSAJE DIRECTO — agradecimiento',
+  respuesta:'RESPUESTA — a InMail del reclutador'
+};
+function lVals(){
+  const n=$('lNombre').value.trim();
+  return { sal: n?'Hola '+n:'Hola', emp: $('lEmpresa').value.trim()||'[empresa]',
+    crg: $('lCargo').value.trim()||'[cargo]', det: $('lDetalle').value.trim() };
+}
+const L_T = {
+  conexion(){ const v=lVals(); const d=v.det?' Me interesa mucho '+v.det+'.':'';
+    return v.sal+', vi que reclutas perfiles tech en '+v.emp+'.'+d+' Soy desarrollador front-end con 5 sitios en producción, buscando mi primer rol junior. ¡Me encantaría conectar!'; },
+  frio(){ const v=lVals(); const d=v.det?' Me llamó especialmente la atención '+v.det+'.':'';
+    return v.sal+', ¡gracias por conectar!\n\nTe escribo porque vi el cargo de '+v.crg+' en '+v.emp+' y calza muy bien con mi perfil.'+d+'\n\n'+CONFIG.hook+' Acá está mi portafolio con todo funcionando en vivo: '+CONFIG.portafolio+'\n\n¿Habría posibilidad de que mi postulación sea considerada en el proceso? Cualquier feedback también me sirve un montón.\n\n¡Gracias por tu tiempo!'; },
+  followup(){ const v=lVals();
+    return v.sal+', ¿cómo estás?\n\nHace unos días postulé al cargo de '+v.crg+' en '+v.emp+' y quería reforzar mi interés por el puesto.\n\n'+CONFIG.hook+' Portafolio: '+CONFIG.portafolio+'\n\nQuedo atento a cualquier novedad del proceso. ¡Muchas gracias!'; },
+  gracias(){ const v=lVals(); const d=v.det?' Me gustó especialmente lo que conversamos sobre '+v.det+'.':'';
+    return v.sal+', muchas gracias por el tiempo de la entrevista.'+d+'\n\nSalí con más ganas todavía de sumarme al equipo de '+v.emp+'. Si necesitan cualquier información adicional de mi parte, quedo totalmente disponible.\n\n¡Que tengas una excelente semana!'; },
+  respuesta(){ const v=lVals(); const d=v.det?' Sobre '+v.det+', encantado de profundizar.':'';
+    return v.sal+', ¡muchas gracias por escribirme!\n\nMe interesa conocer más sobre el cargo de '+v.crg+'.'+d+' Te cuento en corto: '+CONFIG.hook+' Portafolio: '+CONFIG.portafolio+'\n\n¿Cuándo te acomodaría conversar? Tengo disponibilidad flexible esta semana.'; }
+};
+function lEscSel(){ return document.querySelector('input[name="lE"]:checked').value; }
+function lCount(){
+  const e=lEscSel(), len=$('lMsg').value.length, lim=L_LIMITS[e];
+  $('lCount').textContent = len+' caracteres';
+  $('lLimit').textContent = e==='conexion'?'tope LinkedIn: '+lim:'recomendado: hasta '+lim;
+  $('lCount').className = 'cnt '+(len<=lim*0.9?'ok':(len<=lim?'warn':'bad'));
+}
+function lBuild(){
+  const e=lEscSel();
+  $('lMsg').value = L_T[e]();
+  $('lSub').textContent = '>_ '+L_SUBS[e];
+  $('lTip').textContent = '>_ '+L_TIPS[e];
+  $('lFCargo').style.display = (e==='conexion'||e==='gracias')?'none':'block';
+  lCount();
+}
+['lNombre','lEmpresa','lCargo','lDetalle'].forEach(id=>$(id).addEventListener('input', lBuild));
+document.querySelectorAll('input[name="lE"]').forEach(r=>r.addEventListener('change', lBuild));
+$('lMsg').addEventListener('input', lCount);
+$('lBtnRegen').addEventListener('click', lBuild);
+$('lBtnCopy').addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText($('lMsg').value); $('lStatus').textContent='✓ Copiado'; }
+  catch(e){ $('lMsg').select(); document.execCommand('copy'); $('lStatus').textContent='✓ Copiado'; }
+  setTimeout(()=>$('lStatus').textContent='',2500);
+});
+
+/* ---------- TRACKER ---------- */
+const T_EST = {
+  'Enviada':{c:'#8B85A3',act:true,resp:false}, 'Follow-up hecho':{c:'#03EDFC',act:true,resp:false},
+  'Entrevista':{c:'#9551FC',act:true,resp:true}, 'Prueba técnica':{c:'#FB03AA',act:true,resp:true},
+  'Oferta':{c:'#2ED573',act:true,resp:true}, 'Rechazada':{c:'#FF4757',act:false,resp:true},
+  'Sin respuesta':{c:'#544E6B',act:false,resp:false},
+};
+let tData = [];
+$('tFecha').value = hoy();
+const tDias = f => Math.floor((new Date(hoy())-new Date(f))/86400000);
+function tRender(){
+  const tb=$('tBody'); tb.innerHTML='';
+  $('tEmpty').style.display = tData.length?'none':'block';
+  let act=0,ent=0,resp=0,fol=0;
+  tData.sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  tData.forEach((p,i)=>{
+    const E=T_EST[p.estado]||T_EST['Enviada'];
+    if(E.act)act++; if(['Entrevista','Prueba técnica','Oferta'].includes(p.estado))ent++; if(E.resp)resp++;
+    const d=tDias(p.fecha), nf = p.estado==='Enviada'&&d>=5; if(nf)fol++;
+    const opts=Object.keys(T_EST).map(e=>'<option'+(e===p.estado?' selected':'')+'>'+e+'</option>').join('');
+    const emp=p.link?'<a class="jlink" href="'+esc(p.link)+'" target="_blank" rel="noopener">'+esc(p.empresa)+'</a>':esc(p.empresa);
+    tb.insertAdjacentHTML('beforeend','<tr><td><b>'+emp+'</b>'+(nf?' <span class="alert">⚡ follow-up</span>':'')+'</td>'+
+      '<td>'+esc(p.cargo)+'</td><td class="hidem">'+esc(p.portal)+'</td>'+
+      '<td><span class="dias">'+p.fecha+' · '+d+'d</span></td>'+
+      '<td><select data-i="'+i+'" class="tSel">'+opts+'</select></td>'+
+      '<td><button type="button" class="btn del tDel" data-i="'+i+'">✕</button></td></tr>');
+  });
+  $('tTotal').textContent=tData.length; $('tActivas').textContent=act; $('tEntrev').textContent=ent;
+  $('tTasa').textContent=tData.length?Math.round(resp/tData.length*100)+'%':'0%'; $('tFollow').textContent=fol;
+  document.querySelectorAll('.tSel').forEach(s=>s.addEventListener('change',e=>{ tData[+e.target.dataset.i].estado=e.target.value; tRender(); }));
+  document.querySelectorAll('.tDel').forEach(b=>b.addEventListener('click',e=>{
+    const i=+e.target.dataset.i;
+    if(confirm('¿Borrar la postulación a '+tData[i].empresa+'?')){ tData.splice(i,1); tRender(); }
+  }));
+}
+$('tBtnAdd').addEventListener('click',()=>{
+  const emp=$('tEmpresa').value.trim(), crg=$('tCargo').value.trim();
+  if(!emp||!crg){ $('tStatus').textContent='Faltan empresa y cargo'; setTimeout(()=>$('tStatus').textContent='',2500); return; }
+  tData.push({empresa:emp,cargo:crg,portal:$('tPortal').value,fecha:$('tFecha').value||hoy(),link:$('tLink').value.trim(),estado:'Enviada'});
+  $('tEmpresa').value='';$('tCargo').value='';$('tLink').value='';$('tFecha').value=hoy();
+  $('tStatus').textContent='✓ Agregada — GUARDAR ARCHIVO antes de cerrar'; setTimeout(()=>$('tStatus').textContent='',3500);
+  tRender();
+});
+$('tBtnSave').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(tData,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='postulaciones.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+$('tBtnLoad').addEventListener('click',()=>$('tFileIn').click());
+$('tFileIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ tData=JSON.parse(r.result); tRender(); }catch(err){ alert('El archivo no es un JSON válido del tracker.'); } };
+  r.readAsText(f);
+});
+window.addEventListener('beforeunload',e=>{ if(tData.length){ e.preventDefault(); e.returnValue=''; } });
+
+/* ---------- MATCH CV ---------- */
+const M_MIS = [
+  ['HTML5',[/html/],true], ['CSS3',[/css/],true],
+  ['JavaScript (ES6+)',[/javascript|\bjs\b|ecmascript|es6|vanilla/],true],
+  ['Python',[/python/],true],
+  ['Diseño responsive',[/responsive|adaptativo|mobile.?first/],true],
+  ['Animaciones / GSAP',[/gsap|scrolltrigger|animacion|animation/],true],
+  ['Canvas API',[/canvas/],true], ['SVG',[/\bsvg\b/],true],
+  ['Git / GitHub',[/\bgit\b|github|control de versiones|version control/],true],
+  ['Deploy (GitHub Pages)',[/deploy|despliegue|github pages|hosting|publicaci/],true],
+  ['SEO / Schema.org',[/\bseo\b|schema|posicionamiento|structured data/],true],
+  ['E-commerce',[/e-?commerce|carrito|tienda online|checkout/],true],
+  ['Integraciones (WhatsApp / Apps Script / Sheets)',[/whatsapp|apps script|google sheets|integraci/],true],
+  ['Atención a clientes reales',[/cliente|stakeholder|requerimiento/],true],
+  ['Autoaprendizaje',[/autodidacta|autoaprendizaje|self.?taught|aprendizaje continuo/],true],
+  ['IoT / hardware (ESP32)',[/\biot\b|esp32|arduino|sensores/],true],
+  ['React',[/react(?!\s?native)/],'aprendiendo'], ['TypeScript',[/typescript|\bts\b/],'aprendiendo'],
+  ['Node.js',[/node\.?js|\bnode\b/],'aprendiendo'], ['Next.js',[/next\.?js/],'aprendiendo'],
+  ['Bases de datos',[/sql|mysql|postgres|mongo|base de datos|database|timescale/],'aprendiendo'],
+];
+const M_OTROS = [
+  ['Vue',/vue/],['Angular',/angular/],['Sass/LESS',/sass|scss|less/],['Tailwind',/tailwind/],
+  ['Bootstrap',/bootstrap/],['jQuery',/jquery/],['PHP',/php/],['Laravel',/laravel/],
+  ['WordPress',/wordpress/],['Java',/\bjava\b(?!script)/],['C#/.NET',/c#|\.net|dotnet/],
+  ['AWS/Cloud',/aws|azure|gcp|cloud/],['Docker',/docker|kubernetes/],
+  ['Testing',/testing|jest|cypress|unit test|pruebas unitarias/],['REST APIs',/rest|api(s)?\b|graphql/],
+  ['Scrum/Ágil',/scrum|agile|ágil|kanban/],['Figma/Diseño UI',/figma|adobe xd|\bui\b|\bux\b/],
+  ['Inglés',/ingl[eé]s|english/],['Título/Certificación',/t[ií]tulo|ingenier[oía]|certificaci/],
+  ['Experiencia formal (años)',/años de experiencia|experiencia laboral|experiencia comprobable/],
+];
+const mChip = t => '<span class="kw">'+esc(t)+'</span>';
+$('mBtnGo').addEventListener('click',()=>{
+  const txt=$('mAviso').value.toLowerCase();
+  if(txt.trim().length<40){ alert('Pegá el texto completo del aviso primero.'); return; }
+  const match=[],miss=[],extra=[];
+  M_MIS.forEach(([n,pats,est])=>{
+    if(pats.some(p=>p.test(txt))) match.push(n+(est==='aprendiendo'?' (en curso)':''));
+    else if(est===true) extra.push(n);
+  });
+  M_OTROS.forEach(([n,p])=>{ if(p.test(txt)) miss.push(n); });
+  const tot=match.length+miss.length, pct=tot?Math.round(match.length/tot*100):0;
+  $('mPct').textContent=pct+'%';
+  $('mPct').style.color = pct>=70?'var(--ok)':(pct>=45?'var(--warnc)':'var(--magenta)');
+  $('mBar').style.width=pct+'%';
+  $('mVer').textContent = pct>=70?'Match alto: postulá ya y personalizá la carta.':
+    pct>=45?'Match medio: postulá igual (los avisos piden de más), cubrí los huecos en la carta.':
+    'Match bajo: evaluá si vale la pena, o enfocá tu capacidad de aprendizaje.';
+  $('mMatch').innerHTML = match.length?match.map(mChip).join(''):'<span style="color:var(--dim);font-size:12.5px">Sin coincidencias directas.</span>';
+  $('mMiss').innerHTML = miss.length?miss.map(mChip).join(''):'<span style="color:var(--dim);font-size:12.5px">No detecté requisitos que falten. 🎯</span>';
+  $('mExtra').innerHTML = extra.length?extra.map(mChip).join(''):'—';
+  let t='<b style="color:var(--cyan)">&gt;_ Cómo usar esto:</b><br>1. Las verdes van ARRIBA en tu CV, con la palabra exacta del aviso (los ATS buscan coincidencia literal).<br>';
+  if(miss.length) t+='2. Las naranjas: si conocés algo básico, mencionalo con honestidad. Si piden título o años, tu contrapeso es el portafolio en producción — nombralo en la carta.<br>';
+  t+=(miss.length?'3':'2')+'. Las grises no las borres, pero no les des el primer lugar en esta postulación.';
+  $('mTips').innerHTML=t;
+  $('mResult').style.display='block';
+  $('mResult').scrollIntoView({behavior:'smooth'});
+});
+
+/* ---------- ENTREVISTA ---------- */
+const QS = [
+ {t:'con',p:'Cuéntame de ti / preséntate.',a:'Estructura de 60-90 segundos: presente ("desarrollador front-end con 5 sitios en producción para clientes reales"), pasado breve (técnico en metalurgia → transición autodidacta, contada como fortaleza de disciplina), futuro (por qué este cargo). No recites el CV: contá la historia.'},
+ {t:'con',p:'Veo que no tienes título en informática, ¿cómo compensas eso?',a:'No te defiendas: redirigí a evidencia. "Es cierto, mi formación es autodidacta — y por eso mi carta de presentación es el trabajo real: 5 sitios en producción con clientes que confiaron y pagaron. El título certifica que podés aprender; mi portafolio demuestra que ya lo hice." Cerrá con tu roadmap actual (React, TypeScript).'},
+ {t:'con',p:'Tu experiencia es freelance en solitario, ¿cómo sabemos que funcionas en equipo?',a:'Reconocé el punto y da contraejemplos: coordinación con clientes (que es trabajo en equipo con no-técnicos), tu experiencia en entornos industriales con normas y equipos, y tus ganas explícitas de aprender flujos de equipo (code review, Git colaborativo). La humildad genuina acá suma más que fingir experiencia.'},
+ {t:'con',p:'Cuéntame de un bug difícil que hayas resuelto.',a:'Usá el caso real de cache desync en VÉRTICE (archivos subidos por separado desincronizaban el sitio): qué pasaba, cómo lo diagnosticaste, y la lección de proceso que sacaste (workflow de commit único). Muestra método, no suerte.'},
+ {t:'con',p:'¿De qué proyecto estás más orgulloso y por qué?',a:'Elegí uno y andá a fondo: FIAMMA (armador de pizza SVG con precio en vivo, cero dependencias — decisión técnica deliberada tras los fallos de CDN) o SmartGrow (hardware + software + datos, punta a punta). Explicá las DECISIONES, no las features.'},
+ {t:'con',p:'¿Dónde te ves en 2-3 años?',a:'Honesto y alineado: consolidado como front-end en un equipo, dominando React/TypeScript en producción, y aportando más allá del código (con tu experiencia de trato directo con clientes). Evitá "quiero tener mi propia agencia" en una entrevista de empleo.'},
+ {t:'con',p:'¿Cuál es tu pretensión de renta?',a:'Investigá el rango del mercado antes (GetOnBrd publica rangos). Da un rango, no un número, y ancla en el valor: "por lo que he visto para junior en Chile, entre X e Y — pero me interesa más el espacio de crecimiento que maximizar el primer sueldo." No digas un número muy bajo por inseguridad: señaliza poco valor.'},
+ {t:'con',p:'¿Por qué quieres trabajar con nosotros?',a:'Acá se nota quién hizo la tarea. Mencioná algo ESPECÍFICO de la empresa (producto, cliente, stack, proyecto) y conectalo con tu experiencia. Si no podés nombrar nada específico, no estás listo para esta entrevista.'},
+ {t:'tec',p:'¿Qué es el DOM y cómo interactúas con él?',a:'Definición simple (representación en árbol del HTML que JS puede leer y modificar) + ejemplos TUYOS: el armador de pizza de FIAMMA manipula el DOM para actualizar precio y toppings en vivo. Siempre aterrizá la teoría en tu código real.'},
+ {t:'tec',p:'Diferencia entre var, let y const.',a:'Scope de función vs bloque, hoisting, reasignación. Bonus que te distingue: "en mis proyectos uso const por defecto y let solo cuando reasigno — var no lo uso" — muestra criterio, no solo memoria.'},
+ {t:'tec',p:'¿Flexbox o Grid? ¿Cuándo usas cada uno?',a:'Flex para una dimensión (navbars, filas de botones), Grid para dos (galerías, layouts de página). Citá tu galería masonry de VIKINGO\'S o la grilla de productos de AUSTRAL como ejemplos reales.'},
+ {t:'tec',p:'¿Cómo optimizas el rendimiento de un sitio?',a:'Nombra lo que YA hacés: imágenes optimizadas, animaciones con transform/opacity (no layout), lazy loading, minimizar dependencias (FIAMMA es zero-CDN por decisión). Mencioná Lighthouse como herramienta de medición.'},
+ {t:'tec',p:'¿Qué es responsive design y cómo lo implementas?',a:'Mobile-first, media queries, unidades relativas, imágenes fluidas. Todos tus sitios son responsive: elegí uno y contá un desafío concreto (ej: cómo adaptaste la galería o el hero en pantallas chicas).'},
+ {t:'tec',p:'Explícame tu flujo de trabajo con Git.',a:'Sé honesto sobre tu flujo actual (commits, push a GitHub, Pages para deploy) e incluí la lección de VÉRTICE: por qué pasaste a commits únicos coherentes. Agregá que te entusiasma aprender el flujo de equipo: branches, PRs, code review.'},
+ {t:'tec',p:'¿Qué es una API y has consumido alguna?',a:'Definición simple (contrato para que dos sistemas conversen) + tus casos: integración con Google Sheets vía Apps Script en AUSTRAL, y la API Fastify que construiste para SmartGrow. Tenés ejemplos de CONSUMIR y de CREAR — pocos juniors pueden decir eso.'},
+ {t:'tec',p:'¿Qué sabes de React? Veo que lo estás aprendiendo.',a:'Honestidad calibrada: qué construiste ya (dashboard de SmartGrow con tabs y estado), qué conceptos manejás (componentes, props, useState) y qué te falta (ecosistema, testing). "Estoy en X punto del camino y este es mi ritmo demostrado de aprendizaje" > fingir seniority.'},
+];
+let qFilter='todas';
+function qRender(list){
+  const el=$('qList'); el.innerHTML='';
+  list.forEach((q,i)=>{
+    const div=document.createElement('div'); div.className='q';
+    div.innerHTML='<span class="tag '+q.t+'">'+(q.t==='tec'?'TÉCNICA':'CONDUCTUAL')+'</span>'+
+      '<div class="preg">'+esc(q.p)+'</div>'+
+      '<div class="angulo">&gt;_ Ángulo sugerido: '+esc(q.a)+'</div>'+
+      '<div class="row"><button type="button" class="btn qAng">VER ÁNGULO</button></div>';
+    div.querySelector('.qAng').addEventListener('click',()=>div.querySelector('.angulo').classList.toggle('show'));
+    el.appendChild(div);
+  });
+}
+function qApply(){
+  qRender(qFilter==='todas'?QS:QS.filter(q=>q.t===qFilter));
+}
+document.querySelectorAll('#s-entrevista .row .btn[data-f]').forEach(b=>b.addEventListener('click',()=>{
+  qFilter=b.dataset.f;
+  document.querySelectorAll('#s-entrevista .row .btn[data-f]').forEach(x=>x.classList.toggle('on',x===b));
+  qApply();
+}));
+$('qShuffle').addEventListener('click',()=>{
+  const pool=qFilter==='todas'?QS:QS.filter(q=>q.t===qFilter);
+  qRender([pool[Math.floor(Math.random()*pool.length)]]);
+});
+
+/* init */
+cartaBuild(); lBuild(); tRender(); qApply();
+</script>
+</body>
+</html>
